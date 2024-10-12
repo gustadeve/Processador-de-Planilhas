@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processador de Planilhas de Alunos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        pre {
+            white-space: pre-wrap;       /* Wrap long lines */
+            word-wrap: break-word;       /* Break words */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Processador de Planilhas de Alunos</h1>
+    <input type="file" id="file-input" accept=".xlsx, .xls" />
+    <button id="process-button">Processar Planilha</button>
+    <div id="output"></div>
+    <button id="download-button" style="display: none;">Baixar CSV</button>
+
+    <script>
+        // Mapeamento de códigos conforme as regras fornecidas
+        const codigoMap = {
+            'OBGP': {
+                6: 87,
+                7: 87,
+                8: 89,
+                9: 89,
+                1: 93,
+                2: 93,
+                3: 93,
+                0: 91
+            },
+            'OBLI': {
+                4: 94,
+                5: 94,
+                6: 96,
+                7: 96,
+                8: 98,
+                9: 98,
+                1: 102,
+                2: 102,
+                3: 102,
+                0: 100
+            },
+            'OBMF': {
+                4: 104,
+                5: 104,
+                6: 106,
+                7: 106,
+                8: 108,
+                9: 108,
+                1: 110,
+                2: 110,
+                3: 110,
+                0: 112
+
+            }
+        };
+
+        document.getElementById('process-button').addEventListener('click', () => {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Por favor, selecione um arquivo.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                processData(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function processData(data) {
+            const results = [];
+            for (let i = 1; i < data.length; i++) {  // Começa do índice 1 para ignorar cabeçalhos
+                const row = data[i];
+                if (row.length < 4) {
+                    console.warn(`Linha ${i + 1} incompleta: ${row}`);
+                    continue;
+                }
+
+                const nome = row[1] ? row[1].toString().trim() : '';  // Nome do aluno
+                const email = row[2] ? row[2].toString().trim() : '';  // E-mail do aluno
+                const olympicAbbreviation = row[3] ? row[3].toString().trim() : '';  // Sigla da olimpíada
+                const grade = row[4] ? parseInt(row[4].toString().trim()) : null;  // Série do aluno como número
+
+                // Verifica se a sigla da olimpíada é válida e a série do aluno é válida
+                if (codigoMap[olympicAbbreviation] && codigoMap[olympicAbbreviation][grade] !== undefined) {
+                    const code = codigoMap[olympicAbbreviation][grade];
+                    // Adiciona os dados apenas se o nome e email forem válidos
+                    if (nome && email) {
+                        results.push([nome, email, code]);
+                    }
+                } else {
+                    console.warn(`Dados inválidos na linha ${i + 1}: Olimpíada - ${olympicAbbreviation}, Série - ${grade}`);
+                }
+            }
+
+            if (results.length > 0) {
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerHTML = `<h2>Resultados Processados:</h2><pre>${JSON.stringify(results, null, 2)}</pre>`;
+                document.getElementById('download-button').style.display = 'inline';
+                document.getElementById('download-button').onclick = () => downloadCSV(results);
+            } else {
+                alert('Nenhum dado válido encontrado na planilha.');
+            }
+        }
+
+        function downloadCSV(data) {
+            let csvContent = "";
+            data.forEach(rowArray => {
+                const row = rowArray.join(",");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "alunos_processados.csv");
+            document.body.appendChild(link); 
+            link.click();
+            document.body.removeChild(link); 
+        }
+    </script>
+</body>
+</html>
+
+
