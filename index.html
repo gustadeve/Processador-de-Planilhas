@@ -13,7 +13,7 @@
             color: #333;
         }
         h1 {
-            color: #4CAF50;
+            color: #001F3F; /* Azul marinho */
         }
         input[type="file"] {
             margin-bottom: 20px;
@@ -26,13 +26,13 @@
             padding: 10px 20px;
             font-size: 16px;
             color: #fff;
-            background-color: #4CAF50;
+            background-color: #001F3F; /* Azul marinho */
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #001C33; /* Tom mais escuro de azul marinho para o hover */
         }
         #output {
             margin-top: 20px;
@@ -45,11 +45,19 @@
             white-space: pre-wrap;       /* Wrap long lines */
             word-wrap: break-word;       /* Break words */
         }
+        /* Estilos para logo */
+        .logo {
+            position: absolute; /* Logo no canto superior direito */
+            top: 20px;
+            right: 20px;
+            max-width: 150px; /* Limita a largura da logo */
+        }
     </style>
 </head>
 <body>
 
-    <h1>Processador de Planilhas de Alunos</h1>
+    <h1><i class="fas fa-book"></i> Processador de Planilhas de Alunos</h1> <!-- Ícone de guia adicionado -->
+    <img src="https://cdn.ead.guru/29795/media/public/Logotipos__Seleta_e_Olimp%C3%ADadas_500300px_500230px.png" alt="Logo" class="logo"> <!-- Espaço para a logo -->
     <input type="file" id="file-input" accept=".xlsx, .xls" />
     <button id="process-button">Processar Planilha</button>
     <div id="output"></div>
@@ -91,7 +99,6 @@
                 2: 110,
                 3: 110,
                 0: 112
-
             }
         };
 
@@ -170,5 +177,3 @@
     </script>
 </body>
 </html>
-
-
